@@ -157,7 +157,7 @@ def generate_report_content(input_type, data):
     try:
         if input_type == "WEEKLY":
             prompt = f"""
-            現在是 {current_time}。請根據以下數據寫一份簡短的【全景羅盤週報】。
+            現在是 {current_time}。請根據以下數據寫一份簡短的【深度羅盤週報】。
             數據: 台股{data['weekly_change'].get('TWII')}, 美股{data['weekly_change'].get('SPY')}, VIX {data['prices'].get('VIX')}
             格式: # 標題 \n ## 市場總結 \n ## 跨市場洞察 \n ## 策略
             """
@@ -237,3 +237,4 @@ def explain_simple():
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
+
