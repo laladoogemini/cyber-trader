@@ -2,700 +2,480 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <!-- 關鍵修正：加入 viewport 設定，讓手機正確縮放 -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Intelligent Market Analytics</title>
-    
-    <!-- 引入 Chart.js -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 投資戰情室</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <!-- 引入 Google Fonts (Inter) -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <!-- 引入 FontAwesome -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <style>
         :root {
-            /* 專業金融配色 */
-            --primary: #0f172a;      /* 深海軍藍 (Sidebar) */
-            --accent: #2563eb;       /* 亮藍色 (按鈕/重點) */
-            --bg-body: #f1f5f9;      /* 淺灰背景 */
-            --bg-card: #ffffff;      /* 卡片白底 */
-            --text-main: #1e293b;    /* 主要文字 */
-            --text-muted: #64748b;   /* 次要文字 */
-            --border: #e2e8f0;       /* 柔和邊框 */
-            
-            --success: #10b981;      /* 漲 (綠) */
-            --danger: #ef4444;       /* 跌 (紅) */
-            
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            --radius: 12px;
+            --bg-body: #0f172a; --bg-panel: #1e293b; --border: #334155;
+            --primary: #38bdf8; --text-main: #f8fafc; --text-sub: #94a3b8;
+            --up: #ef4444; --down: #10b981; --gold: #f59e0b;
         }
-
-        /* 全局設定 */
-        * {
-            box-sizing: border-box; /* 讓寬度計算包含 Padding，防止破版 */
-            -webkit-tap-highlight-color: transparent; /* 移除手機點擊藍框 */
-        }
-
-        body {
-            margin: 0;
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            display: flex;
-            height: 100vh;
-            overflow: hidden; /* 電腦版鎖定視窗，內部捲動 */
-        }
-
-        /* --- 側邊欄 --- */
-        .sidebar {
-            width: 280px;
-            background-color: var(--primary);
-            color: white;
-            display: flex;
-            flex-direction: column;
-            padding: 24px;
-            box-shadow: 4px 0 24px rgba(0,0,0,0.05);
-            z-index: 10;
-            overflow-y: auto; /* 內容多時可捲動 */
-        }
-
-        .logo {
-            font-size: 18px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            margin-bottom: 40px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: white;
-            flex-shrink: 0;
-        }
-        .logo i { color: var(--accent); }
-
-        .section-label {
-            font-size: 11px;
-            font-weight: 600;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 12px;
-            margin-top: 20px;
-        }
-
-        /* 輸入控件樣式 */
-        select, input {
-            width: 100%;
-            padding: 12px 16px;
-            margin-bottom: 16px;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 8px;
-            color: white;
-            font-size: 14px;
-            outline: none;
-            transition: 0.2s;
-            appearance: none; /* 移除手機原生樣式 */
-        }
-        select option { background: var(--text-main); color: white; }
-        input::placeholder { color: rgba(255,255,255,0.4); }
-        input:focus, select:focus {
-            border-color: var(--accent);
-            background: rgba(255,255,255,0.15);
-        }
-
-        /* 按鈕樣式 */
-        .btn {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        
-        .btn-primary {
-            background-color: var(--accent);
-            color: white;
-        }
-        .btn-primary:hover { background-color: #1d4ed8; transform: translateY(-1px); }
-        .btn-primary:active { transform: translateY(0); }
-        
-        .btn-secondary {
-            background-color: rgba(255,255,255,0.1);
-            color: white;
-            margin-bottom: 20px;
-        }
-        .btn-secondary:hover { background-color: rgba(255,255,255,0.2); }
-
-        .btn-outline {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text-main);
-        }
-        .btn-outline:hover { background: #f8fafc; }
-
-        /* --- 主內容區 --- */
-        .main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .top-bar {
-            height: 64px;
-            background: var(--bg-card);
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 32px;
-            flex-shrink: 0;
-        }
-        .top-title { font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-        .content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 32px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 24px;
-            -webkit-overflow-scrolling: touch; /* iOS 慣性捲動 */
-        }
-
-        /* --- 儀表板卡片 --- */
-        .hud-grid {
-            display: none;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            width: 100%;
-            max-width: 1000px;
-        }
-
-        .hud-card {
-            background: var(--bg-card);
-            padding: 20px;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-            transition: transform 0.2s;
-        }
-        
-        .hud-label {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-muted);
-            letter-spacing: 0.5px;
-            display: block;
-            margin-bottom: 8px;
-        }
-        .hud-val {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--text-main);
-        }
-
-        /* --- 圖表區 --- */
-        .chart-box {
-            display: none;
-            width: 100%;
-            max-width: 1000px;
-            height: 400px;
-            background: var(--bg-card);
-            padding: 24px;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-            position: relative;
-        }
-
-        /* --- 報告區 --- */
-        .report-box {
-            display: none;
-            width: 100%;
-            max-width: 920px;
-            background: var(--bg-card);
-            padding: 48px;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-            position: relative;
-        }
-
-        .copy-btn {
-            position: absolute;
-            top: 24px;
-            right: 24px;
-            background: #f1f5f9;
-            color: var(--text-muted);
-            border: none;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .copy-btn:hover { background: #e2e8f0; color: var(--text-main); }
-
-        /* --- Markdown --- */
-        .markdown-body { line-height: 1.8; color: #334155; overflow-wrap: break-word; }
-        .markdown-body h1 { 
-            font-size: 28px; 
-            color: var(--text-main); 
-            border-bottom: 2px solid var(--border); 
-            padding-bottom: 16px; 
-            margin-top: 0; 
-        }
-        .markdown-body h2 { 
-            font-size: 20px; 
-            color: var(--primary); 
-            margin-top: 32px; 
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-        }
-        .markdown-body h2::before {
-            content: '';
-            display: inline-block;
-            width: 6px;
-            height: 24px;
-            background-color: var(--accent);
-            margin-right: 12px;
-            border-radius: 4px;
-        }
-        .markdown-body strong { color: var(--text-main); font-weight: 700; }
-        .markdown-body ul { padding-left: 20px; margin-bottom: 20px; }
-        .markdown-body li { margin-bottom: 8px; }
-        .markdown-body p { margin-bottom: 16px; }
-
-        /* --- Loading --- */
-        .loader {
-            display: none;
-            text-align: center;
-            padding: 40px;
-        }
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(37, 99, 235, 0.1);
-            border-radius: 50%;
-            border-top-color: var(--accent);
-            animation: spin 0.8s ease-in-out infinite;
-            margin: 0 auto 16px;
-        }
+        body { margin: 0; font-family: "Microsoft JhengHei", -apple-system, sans-serif; background: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+        .sidebar { width: 280px; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; z-index: 20; flex-shrink: 0; }
+        .main-area { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; }
+        .right-sidebar { width: 220px; background: var(--bg-panel); border-left: 1px solid var(--border); padding: 20px; flex-shrink: 0; overflow-y: auto; display: flex; flex-direction: column; }
+        .logo { font-size: 20px; font-weight: 700; color: var(--primary); margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
+        .section-label { font-size: 11px; color: var(--text-sub); font-weight: 600; margin-bottom: 10px; letter-spacing: 1px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; margin-top: 20px; }
+        input, select, .btn { width: 100%; padding: 10px; margin-bottom: 10px; background: var(--bg-body); border: 1px solid var(--border); color: var(--text-main); border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        .btn-primary { background: var(--primary); color: #0f172a; font-weight: 700; border: none; cursor: pointer; transition: 0.2s; }
+        .btn-primary:hover { background: #7dd3fc; }
+        .btn-outline { background: transparent; color: var(--text-sub); border: 1px solid var(--border); cursor: pointer; text-align: left; transition: 0.2s; }
+        .btn-outline:hover { border-color: var(--text-main); color: var(--text-main); background: rgba(255,255,255,0.05); }
+        .news-box { flex: 1; overflow-y: auto; margin-top: 10px; padding-right: 5px; min-height: 150px; }
+        .news-item { display: block; padding: 10px; margin-bottom: 8px; background: rgba(255,255,255,0.03); border-radius: 6px; text-decoration: none; border-left: 3px solid transparent; transition: 0.2s; }
+        .news-item:hover { background: rgba(255,255,255,0.06); border-left-color: var(--primary); }
+        .news-title { font-size: 12px; color: var(--text-main); line-height: 1.4; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .news-meta { font-size: 10px; color: var(--text-sub); display: flex; justify-content: space-between; }
+        .clock-container { margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border); text-align: left; }
+        .clock-time { font-size: 28px; font-weight: 700; color: var(--text-main); line-height: 1; }
+        .clock-date { font-size: 13px; color: var(--text-sub); margin-top: 5px; }
+        .top-bar { height: 50px; border-bottom: 1px solid var(--border); background: var(--bg-panel); display: flex; align-items: center; padding: 0 20px; }
+        .status { font-size: 12px; color: var(--text-sub); display: flex; align-items: center; gap: 8px; }
+        .dot { width: 6px; height: 6px; background: #10b981; border-radius: 50%; box-shadow: 0 0 6px #10b981; }
+        .dashboard-content { flex: 1; overflow: hidden; padding: 20px; display: flex; flex-direction: column; }
+        .hud { display: none; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; flex-shrink: 0; }
+        .hud-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 15px; }
+        .hud-title { font-size: 11px; color: var(--text-sub); margin-bottom: 4px; }
+        .hud-val { font-size: 22px; font-weight: 700; color: var(--text-main); }
+        .pos { color: var(--up); } .neg { color: var(--down); }
+        .split-view { display: none; flex: 1; gap: 20px; min-height: 0; }
+        .left-column { flex: 5; display: flex; flex-direction: column; gap: 15px; min-width: 0; }
+        .price-chart-box { flex: 55; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 15px; position: relative; }
+        .indicator-chart-box { flex: 45; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 15px; position: relative; }
+        .report-container { flex: 4; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 25px; overflow-y: auto; position: relative; display: flex; flex-direction: column; }
+        .report-header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
+        .model-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; background: rgba(56, 189, 248, 0.1); border: 1px solid var(--primary); color: var(--primary); font-size: 11px; }
+        .report-actions { display: flex; gap: 10px; }
+        .action-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-sub); padding: 4px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; transition: 0.2s; }
+        .action-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-main); border-color: var(--text-main); }
+        .report-header h2 { font-size: 20px; margin: 10px 0 5px 0; color: var(--text-main); }
+        .report-meta { color: var(--gold); font-size: 12px; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .md-body { line-height: 1.7; color: #cbd5e1; font-size: 14px; flex: 1; }
+        .md-body h3 { color: var(--primary); margin-top: 20px; font-size: 16px; border-left: 3px solid var(--primary); padding-left: 10px; }
+        .md-body strong { color: var(--gold); }
+        .md-body blockquote { border-left: 4px solid var(--primary); background: rgba(56,189,248,0.1); margin: 10px 0; padding: 10px; color: #e2e8f0; }
+        .md-body table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 15px 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+        .md-body th { background: rgba(255,255,255,0.08); text-align: left; padding: 10px; font-size: 13px; color: var(--text-main); border-bottom: 1px solid var(--border); }
+        .md-body td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; color: var(--text-sub); }
+        .index-card { background: rgba(255,255,255,0.03); border-radius: 6px; padding: 12px; margin-bottom: 10px; }
+        .index-name { font-size: 12px; color: var(--text-sub); margin-bottom: 4px; }
+        .index-price { font-size: 18px; font-weight: 700; color: var(--text-main); }
+        .index-change { font-size: 13px; float: right; }
+        .loader { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(15,23,42,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 50; }
+        .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s infinite linear; margin-bottom: 20px; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        .loader h3 { margin: 0; color: var(--text-main); font-size: 16px; }
-        .loader p { color: var(--text-muted); font-size: 14px; margin-top: 8px; }
-
-        /* --- Modal --- */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.4);
-            backdrop-filter: blur(2px);
-            z-index: 100;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        .modal-box {
-            background: var(--bg-card);
-            border-radius: var(--radius);
-            padding: 32px;
-            width: 100%;
-            max-width: 450px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            text-align: left;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        .modal-title {
-            margin-top: 0;
-            color: var(--text-main);
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .modal-title i { color: var(--accent); }
-
-        /* ========================================= */
-        /* 📱 手機版 RWD 核心代碼 (Mobile CSS)     */
-        /* ========================================= */
-        @media (max-width: 768px) {
-            /* 1. 佈局改為垂直堆疊 */
-            body {
-                flex-direction: column;
-                height: auto;
-                overflow-y: auto; /* 允許整頁捲動 */
-            }
-
-            /* 2. 側邊欄變成頂部控制面板 */
-            .sidebar {
-                width: 100%;
-                height: auto;
-                padding: 20px;
-                box-shadow: none;
-                border-bottom: 1px solid var(--border);
-                flex-shrink: 0;
-            }
-            .logo { 
-                margin-bottom: 20px; 
-                justify-content: center; 
-            }
-
-            /* 3. 調整主內容區 */
-            .main {
-                width: 100%;
-                height: auto;
-                overflow: visible;
-            }
-            .content {
-                padding: 20px; /* 縮小內距 */
-            }
-
-            /* 4. 頂部標題列調整 */
-            .top-bar {
-                padding: 0 20px;
-                height: 56px;
-            }
-            .top-title {
-                font-size: 15px;
-            }
-
-            /* 5. 儀表板改為 2 欄 (原本是 4 欄會太擠) */
-            .hud-grid {
-                grid-template-columns: 1fr 1fr; 
-                gap: 12px;
-            }
-            .hud-card {
-                padding: 16px;
-            }
-            .hud-val {
-                font-size: 20px;
-            }
-
-            /* 6. 圖表高度調整 */
-            .chart-box {
-                height: 300px;
-                padding: 16px;
-            }
-
-            /* 7. 報告區塊調整 */
-            .report-box {
-                padding: 24px;
-            }
-            .markdown-body h1 {
-                font-size: 24px;
-            }
-            
-            /* 8. 放大點擊區域 (優化手指體驗) */
-            select, input, .btn {
-                padding: 14px;
-                font-size: 16px; /* 防止 iOS 輸入時自動放大 */
-            }
-            
-            /* 9. 隱藏不必要的底部版號 */
-            .sidebar > div[style*="font-size:12px"] {
-                display: none;
-            }
-        }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .modal-box { background: var(--bg-panel); border: 1px solid var(--border); padding: 24px; width: 90%; max-width: 500px; border-radius: 12px; }
+        /* FAB for Advisor */
+        .fab {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 120;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #38bdf8;
+  color: #0f172a;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  font-size: 28px;     /* 圖示大小 */
+  line-height: 64px;   /* 讓圖示垂直置中 */
+  text-align: center;
+}
+.fab:hover { background: #7dd3fc; }
+        .modal-title { color: var(--primary); margin-top: 0; }
     </style>
 </head>
 <body>
 
-<!-- 側邊欄 -->
-<div class="sidebar">
-    <div class="logo">
-        <i class="fa-solid fa-chart-line"></i>
-        <span>智能 Alpha Analytics</span>
-    </div>
-    
-    <div class="section-label">市場概況 Market Overview</div>
-    <button class="btn btn-secondary" onclick="run('WEEKLY')">
-        <i class="fa-solid fa-globe"></i> 生成深度週報 Macro Report
-    </button>
+    <div class="sidebar">
+        <div class="logo"><i class="fa-solid fa-chart-line"></i> AI 投資激情冰果室</div>
 
-    <div class="section-label">個股研究 Equity Research</div>
-    <select id="sel" onchange="document.getElementById('inp').value=this.value">
-        <option value="" disabled selected>快速選擇 Quick Select</option>
-        <optgroup label="🔥 熱門台股">
-            <option value="2330">2330 台積電</option>
-            <option value="2317">2317 鴻海</option>
-            <option value="2603">2603 長榮</option>
-            <option value="0050">0050 台灣50</option>
-        </optgroup>
-        <optgroup label="🇺🇸 美股巨頭">
-            <option value="NVDA">NVDA 輝達</option>
-            <option value="TSLA">TSLA 特斯拉</option>
-            <option value="AAPL">AAPL 蘋果</option>
-            <option value="AMD">AMD 超微</option>
-        </optgroup>
-        <optgroup label="🪙 加密貨幣">
-            <option value="BTC-USD">BTC 比特幣</option>
-            <option value="ETH-USD">ETH 以太幣</option>
-        </optgroup>
-    </select>
-    
-    <input type="text" id="inp" placeholder="輸入代號 Enter Ticker...">
-    
-    <button class="btn btn-primary" onclick="run('STOCK')">
-        <i class="fa-solid fa-bolt"></i> 開始分析 Start Analysis
-    </button>
-
-    <div style="flex:1"></div>
-    <div style="font-size:12px; color:rgba(255,255,255,0.4);">v2.1 RWD Edition</div>
-</div>
-
-<!-- 主內容 -->
-<div class="main">
-    <div class="top-bar">
-        <div class="top-title">投資研究報告 Investment Report</div>
-        <button class="btn btn-outline" style="width:auto; padding: 8px 16px;" onclick="runExplain()">
-            <i class="fa-solid fa-language"></i> 白話解讀 Explain
+        <div class="section-label">MACRO STRATEGY</div>
+        <button class="btn btn-outline" onclick="run('WEEKLY')">
+            <i class="fa-solid fa-globe"></i> 全球市場週報
         </button>
-    </div>
 
-    <div class="content">
-        <!-- 載入中狀態 -->
-        <div id="loader" class="loader">
-            <div class="spinner"></div>
-            <h3>正在生成報告 Generating Report...</h3>
-            <p id="statusText">Connecting to Quantitative Models...</p>
+        <div class="section-label">STOCK ANALYSIS</div>
+        <select id="sel" onchange="document.getElementById('inp').value=this.value">
+            <option value="" disabled selected>快速選擇熱門標的</option>
+            <optgroup label="🔥 台股權值">
+                <option value="2330">2330 台積電</option>
+                <option value="2317">2317 鴻海</option>
+                <option value="2454">2454 聯發科</option>
+                <option value="0050">0050 台灣50</option>
+            </optgroup>
+            <optgroup label="🪙 加密貨幣">
+                <option value="BTC">BTC 比特幣</option>
+                <option value="ETH">ETH 以太幣</option>
+                <option value="SOL">SOL Solana</option>
+                <option value="ADA">ADA Cardano</option>
+                <option value="BNB">BNB 幣安幣</option>
+            </optgroup>
+            <optgroup label="🇺🇸 美股">
+                <option value="NVDA">NVDA NVIDIA</option>
+                <option value="TSLA">TSLA Tesla</option>
+            </optgroup>
+        </select>
+        <input type="text" id="inp" placeholder="輸入代號...">
+        <button class="btn btn-primary" onclick="run('STOCK')">
+            <i class="fa-solid fa-bolt"></i> 開始深度分析
+        </button>
+
+        <div class="section-label">REAL-TIME NEWS</div>
+        <div class="news-box" id="news-feed">
+            <div style="text-align:center; color: var(--text-sub); font-size: 13px; padding-top:20px;">請選擇標的...</div>
         </div>
 
-        <!-- 數據儀表板 (HUD) -->
-        <div id="hud" class="hud-grid">
-            <div class="hud-card">
-                <span class="hud-label">現價 Price</span>
-                <span id="h-price" class="hud-val">--</span>
-            </div>
-            <div class="hud-card">
-                <span class="hud-label">漲跌幅 Change (%)</span>
-                <span id="h-pct" class="hud-val">--</span>
-            </div>
-            <div class="hud-card">
-                <span class="hud-label">相對強弱 RSI (14)</span>
-                <span id="h-rsi" class="hud-val">--</span>
-            </div>
-            <div class="hud-card">
-                <span class="hud-label">技術趨勢 Trend</span>
-                <span id="h-trend" class="hud-val" style="font-size:18px;">--</span>
-            </div>
-        </div>
-
-        <!-- 圖表區 -->
-        <div id="chartBox" class="chart-box">
-            <canvas id="priceChart"></canvas>
-        </div>
-
-        <!-- 文字報告區 -->
-        <div id="reportBox" class="report-box">
-            <button class="copy-btn" onclick="copyRaw()">
-                <i class="fa-regular fa-copy"></i> 複製 Copy
-            </button>
-            <div id="md-content" class="markdown-body"></div>
-            <textarea id="rawText" style="display:none;"></textarea>
+        <div class="clock-container">
+            <div class="clock-time" id="clock-time">--:--</div>
+            <div class="clock-date" id="clock-date">----/--/--</div>
         </div>
     </div>
-</div>
 
-<!-- 彈窗 -->
-<div id="modal" class="modal" onclick="this.style.display='none'">
-    <div class="modal-box" onclick="event.stopPropagation()">
-        <h3 class="modal-title"><i class="fa-solid fa-robot"></i> AI 解讀助手 Assistant</h3>
-        <p id="explainText" style="line-height:1.6; color:#475569; margin:20px 0;">...</p>
-        <button class="btn btn-primary" onclick="document.getElementById('modal').style.display='none'">關閉 Close</button>
+    <div class="main-area">
+        <div class="top-bar">
+            <div class="status"><div class="dot"></div> System Online</div>
+        </div>
+
+        <div class="dashboard-content">
+            <div id="welcome" style="text-align: center; padding-top: 100px; color: var(--text-sub);">
+                <i class="fa-solid fa-robot" style="font-size: 60px; margin-bottom: 20px; opacity: 0.5;"></i>
+                <h2 style="color: var(--text-main);">AI Dual-Model System</h2>
+                <p>請從左側選擇標的，右側將顯示即時指數</p>
+            </div>
+
+            <div id="loader" class="loader">
+                <div class="spinner"></div>
+                <div style="font-size: 18px; font-weight: 500;">AI Reasoning in Progress...</div>
+                <div id="statusText" style="color: var(--primary); font-size: 14px; margin-top: 10px;">Connecting...</div>
+            </div>
+
+            <div id="hud" class="hud">
+                <div class="hud-card"><div class="hud-title">Price 現價</div><div id="h-price" class="hud-val">--</div></div>
+                <div class="hud-card"><div class="hud-title">Change 漲跌</div><div id="h-pct" class="hud-val">--</div></div>
+                <div class="hud-card"><div class="hud-title">RSI 強弱</div><div id="h-rsi" class="hud-val">--</div></div>
+                <div class="hud-card"><div class="hud-title">Trend 趨勢</div><div id="h-trend" class="hud-val" style="font-size: 20px;">--</div></div>
+            </div>
+
+            <div id="splitBox" class="split-view">
+                <div class="left-column">
+                    <div class="price-chart-box">
+                        <canvas id="priceChart"></canvas>
+                    </div>
+                    <div class="indicator-chart-box">
+                        <canvas id="indicatorChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="report-container">
+                    <div class="report-header-row">
+                        <div id="badge-area"></div>
+                        <div class="report-actions">
+                            <button class="action-btn" onclick="runExplain()"><i class="fa-regular fa-comment-dots"></i> 白話翻譯</button>
+                            <button class="action-btn" onclick="copyRaw()"><i class="fa-regular fa-copy"></i> 複製原文</button>
+                        </div>
+                    </div>
+                    <div id="report-title-area"></div>
+                    <div id="report-content" class="md-body"></div>
+                    <textarea id="rawText" style="display:none;"></textarea>
+                    <div style="margin-top:16px; font-size:12px; color:#94a3b8; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px;">
+                      免責聲明：本報告僅供參考，並非投資建議。市場有風險，投資需謹慎。
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
 
-<script>
-let myChart = null;
+    <div class="right-sidebar">
+        <div class="section-label" style="margin-top:0;">GLOBAL INDICES</div>
+        <div id="indices-box"></div>
+        <div id="indices-updated" style="color: var(--text-sub); font-size: 11px; margin-top: 6px;"></div>
+    </div>
 
-async function run(type) {
-    let ticker = type==='WEEKLY' ? 'WEEKLY' : document.getElementById('inp').value.trim();
-    if(!ticker) return alert("請輸入股票代號 / Please enter ticker");
+    <!-- 右下角 FAB：AI 投顧老師（雙模型） -->
+    <button class="fab" title="AI投顧老師（雙模型）" onclick="openAdvisor()">🤖</button>
 
-    // UI Reset
-    document.getElementById('hud').style.display = 'none';
-    document.getElementById('chartBox').style.display = 'none';
-    document.getElementById('reportBox').style.display = 'none';
-    document.getElementById('loader').style.display = 'block';
-    
-    // 手機版自動捲動到 loading
-    if(window.innerWidth <= 768) {
-        document.getElementById('loader').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-    
-    document.getElementById('statusText').innerText = type==='WEEKLY' 
-        ? "正在分析宏觀經濟數據 / Analyzing Macro Data..." 
-        : "正在獲取即時市場數據 / Fetching Real-time Data...";
+    <!-- 投顧老師彈窗 -->
+    <div id="advisorModal" class="modal" onclick="this.style.display='none'">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <h3 class="modal-title">AI 投顧老師（雙模型精華）</h3>
+            <div id="advisorContent" style="line-height:1.6; color: var(--text-main); white-space: pre-line;">尚未有內容，請先生成個股報告。</div>
+            <button class="btn btn-primary" style="width:auto; padding:6px 20px; float:right;" onclick="document.getElementById('advisorModal').style.display='none'">關閉</button>
+            <div style="clear:both;"></div>
+        </div>
+    </div>
 
-    try {
-        const res = await fetch('/get_analysis', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ticker: ticker})
-        });
-        const data = await res.json();
-        
-        document.getElementById('loader').style.display = 'none';
+    <div id="modal" class="modal" onclick="this.style.display='none'">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <h3 style="color: var(--primary); margin-top: 0;">投資老手翻譯</h3>
+            <p id="explainText" style="line-height: 1.6; color: var(--text-main); margin: 20px 0;">...</p>
+            <button class="btn btn-primary" style="width: auto; padding: 6px 20px; float:right;" onclick="document.getElementById('modal').style.display='none'">關閉</button>
+            <div style="clear:both;"></div>
+        </div>
+    </div>
 
-        if(data.error) {
-            alert(data.error);
-            return;
+    <script>
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock-time').innerText = now.toLocaleTimeString('en-US', {hour12: false, hour: '2-digit', minute:'2-digit'});
+            document.getElementById('clock-date').innerText = now.toLocaleDateString('zh-TW', {year: 'numeric', month: '2-digit', day: '2-digit'});
+        }
+        setInterval(updateClock, 1000); updateClock();
+
+        async function fetchIndices() {
+            try {
+                const res = await fetch('/get_indices');
+                const data = await res.json();
+                document.getElementById('indices-box').innerHTML = data.map(i => `
+                    <div class="index-card">
+                        <div class="index-name">${i.name}</div>
+                        <div class="index-price">${i.price}</div>
+                        <div class="index-change ${i.change >= 0 ? 'pos' : 'neg'}">${i.change >= 0 ? '+' : ''}${i.change}%</div>
+                        <div style="clear:both;"></div>
+                    </div>
+                `).join('');
+                document.getElementById('indices-updated').innerText = '更新時間：' + new Date().toLocaleTimeString('zh-TW', {hour12:false});
+            } catch {
+                document.getElementById('indices-box').innerHTML = '<div style="color:#94a3b8;">指數載入失敗</div>';
+            }
+        }
+        fetchIndices();
+
+        let priceChart = null;
+        let indicatorChart = null;
+
+        const commonTooltip = {
+          enabled: true,
+          callbacks: {
+            label: function(ctx) {
+              const val = ctx.parsed.y;
+              return ' ' + ctx.dataset.label + ': ' + (typeof val === 'number' ? val.toFixed(2) : val);
+            }
+          },
+          backgroundColor: 'rgba(2,6,23,0.9)',
+          titleColor: '#e2e8f0',
+          bodyColor: '#cbd5e1',
+          borderColor: '#334155',
+          borderWidth: 1
+        };
+
+        async function run(type) {
+            let ticker = type === 'WEEKLY' ? 'WEEKLY' : document.getElementById('inp').value.trim();
+            if(!ticker) return alert("請輸入代號");
+
+            document.getElementById('welcome').style.display = 'none';
+            document.getElementById('hud').style.display = 'none';
+            document.getElementById('splitBox').style.display = 'none';
+            document.getElementById('loader').style.display = 'flex';
+
+            if(type !== 'WEEKLY') fetchNews(ticker);
+
+            try {
+                document.getElementById('statusText').innerText = "Phase 1: DeepSeek R1 Reasoning...";
+                const res = await fetch('/get_analysis', {
+                  method: 'POST',
+                  headers: {'Content-Type': 'application/json'},
+                  body: JSON.stringify({ticker: ticker})
+                });
+
+                document.getElementById('statusText').innerText = "Phase 2: xAI Grok Synthesis...";
+                const data = await res.json();
+                if(data.error) throw new Error(data.error);
+
+                document.getElementById('loader').style.display = 'none';
+
+                if(data.type === 'stock') {
+                    window.__lastMeta = data.meta; // 保存個股資料供 /advise
+                    renderHUD(data.meta);
+                    renderPriceChart(data.chartData.dates, data.chartData.prices, data.meta.pct >= 0);
+                    renderIndicatorChart(data.chartData.dates, data.chartData.volumes, data.chartData.macd, data.chartData.macd_signal, data.chartData.macd_hist);
+
+                    document.getElementById('badge-area').innerHTML =
+                      `<div class="model-badge" title="R1: 深度推理；Grok: 新手指引整合"><i class="fa-solid fa-microchip"></i> ${data.model_info}</div>`;
+                    document.getElementById('report-title-area').innerHTML = `
+                        <h2>${data.meta.name_zh} (${data.meta.symbol}) 操作建議報告</h2>
+                        <div class="report-meta">日期: ${new Date().toISOString().split('T')[0]} | 檢核股價: ${data.meta.price} (${data.meta.pct}%)</div>`;
+                    document.querySelector('.left-column').style.display = 'flex';
+                } else {
+                    document.getElementById('badge-area').innerHTML =
+                      `<div class="model-badge" title="R1: 深度推理；Grok: 新手指引整合"><i class="fa-solid fa-microchip"></i> ${data.model_info}</div>`;
+                    document.getElementById('report-title-area').innerHTML =
+                      `<h2>全球宏觀市場週報</h2><div class="report-meta">日期: ${new Date().toISOString().split('T')[0]} | 週期: 本週</div>`;
+                    document.querySelector('.left-column').style.display = 'none';
+                }
+
+                document.getElementById('report-content').innerHTML = data.content;
+                document.getElementById('rawText').value = data.raw;
+                document.getElementById('splitBox').style.display = 'flex';
+
+            } catch(e) {
+                showError(e.message || '服務異常');
+            }
         }
 
-        // 個股模式：顯示 HUD 與 圖表
-        if(data.type === 'stock') {
-            const m = data.meta;
-            document.getElementById('h-price').innerText = m.price;
-            
-            // 漲跌顏色處理
-            const pctElem = document.getElementById('h-pct');
-            pctElem.innerText = (m.pct > 0 ? '+' : '') + m.pct + '%';
-            pctElem.style.color = m.pct >= 0 ? 'var(--danger)' : 'var(--success)'; 
-            
-            document.getElementById('h-rsi').innerText = m.tech.RSI;
-            
-            // RSI 顏色警示
-            const rsiVal = parseFloat(m.tech.RSI);
-            const rsiElem = document.getElementById('h-rsi');
-            if(rsiVal > 70) rsiElem.style.color = 'var(--danger)';
-            else if(rsiVal < 30) rsiElem.style.color = 'var(--success)';
-            else rsiElem.style.color = 'var(--text-main)';
+        function showError(msg) {
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('splitBox').style.display = 'flex';
+            const report = document.getElementById('report-content');
+            report.innerHTML = `
+                <div style="background: rgba(239,68,68,0.12); border:1px solid #ef4444; color:#fecaca; padding:12px; border-radius:8px;">
+                    <strong>發生錯誤：</strong> ${msg}<br>
+                    請稍後重試，或改用其他標的／週報。
+                </div>
+            `;
+        }
 
-            document.getElementById('h-trend').innerText = m.tech.Trend;
+        async function fetchNews(ticker) {
+            const el = document.getElementById('news-feed');
+            el.innerHTML = '<div style="text-align:center;">Loading...</div>';
+            try {
+                const res = await fetch('/get_news', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ticker: ticker}) });
+                const data = await res.json();
+                if (data.news && data.news.length) {
+                  el.innerHTML = data.news.map(n => `
+                      <a href="${n.link}" target="_blank" class="news-item">
+                          <div class="news-title">${n.title}</div>
+                          <div class="news-meta"><span>${n.publisher}</span><span>${n.time}</span></div>
+                      </a>`).join('');
+                } else {
+                  const reason = data.reason || 'no_data';
+                  let msg = '目前無可用新聞來源';
+                  if (reason === 'no_source') msg = '來源暫無新聞（yfinance 未提供）。';
+                  if (reason === 'server_error') msg = '伺服器暫時無法取得新聞。';
+                  el.innerHTML = `<div style="color:#94a3b8;">${msg}</div>`;
+                }
+            } catch {
+                el.innerHTML = '<div style="color:#94a3b8;">新聞載入失敗</div>';
+            }
+        }
+
+        function renderHUD(meta) {
+            document.getElementById('h-price').innerText = meta.price;
+            const elPct = document.getElementById('h-pct');
+            elPct.innerText = (meta.pct > 0 ? '+' : '') + meta.pct + '%';
+            elPct.className = 'hud-val ' + (meta.pct >= 0 ? 'pos' : 'neg');
+            document.getElementById('h-rsi').innerText = meta.tech.RSI;
+            const elTrend = document.getElementById('h-trend');
+            elTrend.innerText = meta.tech.Trend;
+            elTrend.style.color = meta.tech.Trend.includes('多') ? '#ef4444' : '#10b981';
             document.getElementById('hud').style.display = 'grid';
-
-            if(data.chartData && typeof Chart !== 'undefined') {
-                renderChart(data.chartData.dates, data.chartData.prices);
-                document.getElementById('chartBox').style.display = 'block';
-            }
         }
 
-        document.getElementById('md-content').innerHTML = data.content;
-        document.getElementById('rawText').value = data.raw;
-        document.getElementById('reportBox').style.display = 'block';
+        function renderPriceChart(dates, prices, isUp) {
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            if(priceChart) priceChart.destroy();
+            const color = isUp ? '#ef4444' : '#10b981';
+            const gradient = ctx.createLinearGradient(0,0,0,300);
+            gradient.addColorStop(0, isUp ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.2)');
+            gradient.addColorStop(1, 'rgba(15,23,42,0)');
 
-    } catch(e) {
-        alert("System Error: " + e);
-        console.error(e);
-        document.getElementById('loader').style.display = 'none';
-    }
-}
-
-function renderChart(dates, prices) {
-    const ctx = document.getElementById('priceChart').getContext('2d');
-    if(myChart) myChart.destroy();
-    
-    let gradient = ctx.createLinearGradient(0, 0, 0, 400);
-    gradient.addColorStop(0, 'rgba(37, 99, 235, 0.2)'); 
-    gradient.addColorStop(1, 'rgba(37, 99, 235, 0)');
-
-    myChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: dates,
-            datasets: [{
-                label: 'Price',
-                data: prices,
-                borderColor: '#2563eb',
-                backgroundColor: gradient,
-                borderWidth: 2,
-                pointRadius: window.innerWidth < 768 ? 2 : 3, // 手機版縮小圓點
-                pointBackgroundColor: '#ffffff',
-                pointBorderColor: '#2563eb',
-                fill: true,
-                tension: 0.3
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: {
-                intersect: false,
-                mode: 'index',
-            },
-            plugins: { 
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: '#1e293b',
-                    titleColor: '#fff',
-                    bodyColor: '#fff',
-                    padding: 10,
-                    cornerRadius: 6,
-                    displayColors: false
+            priceChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels: dates, datasets: [{ label: 'Price', data: prices, borderColor: color, backgroundColor: gradient, borderWidth: 2, pointRadius: 0, fill: true }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: {display: false}, tooltip: commonTooltip },
+                    scales: { x: {display: false}, y: {grid: {color: '#334155'}} }
                 }
-            },
-            scales: {
-                x: { 
-                    grid: { display: false }, 
-                    ticks: { 
-                        color: '#64748b', 
-                        font: {family: 'Inter'},
-                        maxTicksLimit: window.innerWidth < 768 ? 5 : 10 // 手機版減少X軸標籤
-                    } 
+            });
+        }
+
+        function renderIndicatorChart(dates, vols, macd, signal, hist) {
+            const ctx = document.getElementById('indicatorChart').getContext('2d');
+            if(indicatorChart) indicatorChart.destroy();
+
+            indicatorChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        { type: 'line', label: 'MACD', data: macd, borderColor: '#38bdf8', borderWidth: 1, pointRadius: 0, yAxisID: 'y' },
+                        { type: 'line', label: 'Signal', data: signal, borderColor: '#f59e0b', borderWidth: 1, pointRadius: 0, yAxisID: 'y' },
+                        { type: 'bar', label: 'Hist', data: hist, backgroundColor: (ctx) => {
+                            const v = ctx.raw; return v >= 0 ? '#ef4444' : '#10b981';
+                        }, yAxisID: 'y' },
+                        { type: 'bar', label: 'Vol', data: vols, backgroundColor: 'rgba(255,255,255,0.1)', yAxisID: 'y1' }
+                    ]
                 },
-                y: { 
-                    grid: { color: '#f1f5f9', borderDash: [5, 5] }, 
-                    ticks: { color: '#64748b', font: {family: 'Inter'} },
-                    beginAtZero: false 
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: {display: false}, tooltip: commonTooltip },
+                    scales: {
+                        x: { display: false },
+                        y: { position: 'right', grid: {color: '#334155'}, ticks: { color: '#9ca3af' } },
+                        y1: { display: false, min: 0 }
+                    }
                 }
-            }
+            });
         }
-    });
-}
 
-async function runExplain() {
-    const txt = document.getElementById('rawText').value;
-    if(!txt) return alert("請先生成報告才能進行翻譯 / Please generate report first");
-    
-    document.getElementById('modal').style.display = 'flex';
-    document.getElementById('explainText').innerText = "AI 正在分析數據... / AI is analyzing data...";
-    
-    try {
-        const res = await fetch('/explain_simple', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({text: txt})
-        });
-        const data = await res.json();
-        document.getElementById('explainText').innerText = data.explanation;
-    } catch(e) {
-        document.getElementById('explainText').innerText = "翻譯連線逾時，請稍後再試。 / Connection timeout, please try again.";
-    }
-}
+        async function copyRaw() {
+          try {
+            const txt = document.getElementById('rawText').value || '';
+            await navigator.clipboard.writeText(txt);
+            alert("報告內容已複製！");
+          } catch {
+            const txt = document.getElementById('rawText');
+            txt.style.display = 'block'; txt.select(); document.execCommand('copy'); txt.style.display = 'none';
+            alert("已嘗試以相容方式複製，若失敗請手動複製。");
+          }
+        }
 
-function copyRaw() {
-    const txt = document.getElementById('rawText');
-    txt.style.display = 'block';
-    txt.select();
-    document.execCommand('copy');
-    txt.style.display = 'none';
-    
-    const btn = document.querySelector('.copy-btn');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<i class="fa-solid fa-check"></i> 已複製 Copied!';
-    setTimeout(() => {
-        btn.innerHTML = originalText;
-    }, 2000);
-}
-</script>
+        function runExplain() {
+            const content = document.getElementById('rawText').value || '';
+            if(!content) return alert("請先生成報告");
+            document.getElementById('modal').style.display = 'flex';
 
+            const isAggressive = /積極|🟢|看多|上彎|突破|量價齊升/.test(content);
+            const isCaution = /風險|回檔|🟡|震盪|停損|觀望/.test(content);
+            const isBear = /🔴|下彎|破線|空頭|轉弱/.test(content);
+
+            let line = "簡單來說：目前走勢中性，先觀望為主。";
+            if (isBear) line = "簡單來說：走勢偏弱，避免追高，嚴設停損。";
+            else if (isAggressive && !isCaution) line = "簡單來說：走勢偏強，可少量跟進、分批布局。";
+            else if (isCaution) line = "簡單來說：有機會但風險不小，分批、嚴設停損，避免追高。";
+
+            setTimeout(() => {
+                document.getElementById('explainText').innerText = `${line}\n(這是基於 AI 報告的快速總結)`;
+            }, 300);
+        }
+
+        // 右下角：AI 投顧老師
+        async function openAdvisor() {
+          const raw = document.getElementById('rawText').value || '';
+          const title = document.getElementById('report-title-area').innerText || '';
+          if (!raw || title.includes('週報')) {
+            alert('請先生成「個股」報告，再使用 AI 投顧老師。');
+            return;
+          }
+          const meta = window.__lastMeta || null;
+          if (!meta) { alert('缺少個股資訊，請重新產生報告。'); return; }
+
+          document.getElementById('advisorModal').style.display = 'flex';
+          const box = document.getElementById('advisorContent');
+          box.innerText = 'AI 思考中...';
+
+          try {
+            const r = await fetch('/advise', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({meta, raw})
+            });
+            const d = await r.json();
+            if (d.error) throw new Error(d.error);
+            const simple = (d.advice_simple || '').trim();
+            const rawAdvice = (d.advice_raw || '').trim();
+            box.innerText = `重點建議（精簡）：\n${simple}\n\n專業要點：\n${rawAdvice}`;
+          } catch (e) {
+            box.innerText = '暫時無法取得建議，請稍後再試。';
+          }
+        }
+    </script>
 </body>
 </html>
-
