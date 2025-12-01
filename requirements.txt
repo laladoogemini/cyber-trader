@@ -1,8 +1,10 @@
 flask
 gunicorn
-yfinance
-pandas
+yfinance>=0.2.40
+pandas>=2.0.0
 pandas_ta
 openai
 markdown
-numpy
+numpy<2.0.0
+lxml
+requests
