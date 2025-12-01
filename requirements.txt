@@ -1,9 +1,0 @@
-flask
-gunicorn
-requests
-openai
-markdown
-yfinance
-pandas
-pandas_ta
-numpy<2.0.0
