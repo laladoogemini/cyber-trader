@@ -1,12 +1,10 @@
-setuptools
-wheel
 flask
 gunicorn
 yfinance
-pandas==1.5.3        # 穩定版本
+pandas
 pandas_ta
 openai
 markdown
-numpy==1.23.5        # 兼容版本
+numpy
 lxml
 requests
