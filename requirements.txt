@@ -1,10 +1,19 @@
+# 1. 建置工具 (Build Tools - 讓 Render 順利安裝)
+setuptools
+wheel
+
+# 2. 核心框架與伺服器
 flask
 gunicorn
-yfinance
+requests
+
+# 3. 資料科學與處理 (已包含最終修復版本)
 pandas
+numpy<2.0.0      # 防止 numpy 2.0 造成 pandas_ta 衝突
+yfinance
 pandas_ta
+lxml
+
+# 4. API 與格式化
 openai
 markdown
-numpy<2.0.0      
-lxml
-requests
