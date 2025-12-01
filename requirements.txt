@@ -1,10 +1,11 @@
 flask
 gunicorn
-yfinance>=0.2.40
-pandas>=2.0.0
+yfinance
+pandas==1.5.3        # 鎖定在穩定版本
 pandas_ta
 openai
 markdown
-numpy<2.0.0
+numpy==1.23.5        # 與 pandas 1.5.3 相容
 lxml
 requests
+setuptools           # 確保建置工具存在
