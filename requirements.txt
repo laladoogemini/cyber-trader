@@ -1,13 +1,9 @@
-# --- Final, Clean Dependencies ---
-setuptools
-wheel
 flask
 gunicorn
 requests
-yfinance
-pandas
-numpy<2.0.0
-pandas_ta
-lxml
 openai
 markdown
+yfinance
+pandas
+pandas_ta
+numpy<2.0.0
