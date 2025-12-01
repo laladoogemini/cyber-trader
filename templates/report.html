@@ -2,12 +2,13 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 關鍵修正：加入 viewport 設定，讓手機正確縮放 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Intelligent Market Analytics</title>
     
     <!-- 引入 Chart.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <!-- 引入 Google Fonts (Inter) 提升質感 -->
+    <!-- 引入 Google Fonts (Inter) -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- 引入 FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -30,6 +31,12 @@
             --radius: 12px;
         }
 
+        /* 全局設定 */
+        * {
+            box-sizing: border-box; /* 讓寬度計算包含 Padding，防止破版 */
+            -webkit-tap-highlight-color: transparent; /* 移除手機點擊藍框 */
+        }
+
         body {
             margin: 0;
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -37,7 +44,7 @@
             color: var(--text-main);
             display: flex;
             height: 100vh;
-            overflow: hidden;
+            overflow: hidden; /* 電腦版鎖定視窗，內部捲動 */
         }
 
         /* --- 側邊欄 --- */
@@ -50,6 +57,7 @@
             padding: 24px;
             box-shadow: 4px 0 24px rgba(0,0,0,0.05);
             z-index: 10;
+            overflow-y: auto; /* 內容多時可捲動 */
         }
 
         .logo {
@@ -61,6 +69,7 @@
             align-items: center;
             gap: 10px;
             color: white;
+            flex-shrink: 0;
         }
         .logo i { color: var(--accent); }
 
@@ -85,8 +94,8 @@
             color: white;
             font-size: 14px;
             outline: none;
-            box-sizing: border-box;
             transition: 0.2s;
+            appearance: none; /* 移除手機原生樣式 */
         }
         select option { background: var(--text-main); color: white; }
         input::placeholder { color: rgba(255,255,255,0.4); }
@@ -116,6 +125,7 @@
             color: white;
         }
         .btn-primary:hover { background-color: #1d4ed8; transform: translateY(-1px); }
+        .btn-primary:active { transform: translateY(0); }
         
         .btn-secondary {
             background-color: rgba(255,255,255,0.1);
@@ -148,8 +158,9 @@
             align-items: center;
             justify-content: space-between;
             padding: 0 32px;
+            flex-shrink: 0;
         }
-        .top-title { font-weight: 600; color: var(--text-main); }
+        .top-title { font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         .content {
             flex: 1;
@@ -159,6 +170,7 @@
             flex-direction: column;
             align-items: center;
             gap: 24px;
+            -webkit-overflow-scrolling: touch; /* iOS 慣性捲動 */
         }
 
         /* --- 儀表板卡片 --- */
@@ -178,8 +190,7 @@
             border: 1px solid var(--border);
             transition: transform 0.2s;
         }
-        .hud-card:hover { transform: translateY(-2px); }
-
+        
         .hud-label {
             font-size: 12px;
             font-weight: 600;
@@ -237,8 +248,8 @@
         }
         .copy-btn:hover { background: #e2e8f0; color: var(--text-main); }
 
-        /* --- Markdown 內容排版 (Typography) --- */
-        .markdown-body { line-height: 1.8; color: #334155; }
+        /* --- Markdown --- */
+        .markdown-body { line-height: 1.8; color: #334155; overflow-wrap: break-word; }
         .markdown-body h1 { 
             font-size: 28px; 
             color: var(--text-main); 
@@ -268,7 +279,7 @@
         .markdown-body li { margin-bottom: 8px; }
         .markdown-body p { margin-bottom: 16px; }
 
-        /* --- Loading 動畫 --- */
+        /* --- Loading --- */
         .loader {
             display: none;
             text-align: center;
@@ -287,7 +298,7 @@
         .loader h3 { margin: 0; color: var(--text-main); font-size: 16px; }
         .loader p { color: var(--text-muted); font-size: 14px; margin-top: 8px; }
 
-        /* --- 彈窗 (Modal) --- */
+        /* --- Modal --- */
         .modal {
             display: none;
             position: fixed;
@@ -298,14 +309,18 @@
             z-index: 100;
             align-items: center;
             justify-content: center;
+            padding: 20px;
         }
         .modal-box {
             background: var(--bg-card);
             border-radius: var(--radius);
             padding: 32px;
-            width: 450px;
+            width: 100%;
+            max-width: 450px;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
             text-align: left;
+            max-height: 80vh;
+            overflow-y: auto;
         }
         .modal-title {
             margin-top: 0;
@@ -317,12 +332,87 @@
         }
         .modal-title i { color: var(--accent); }
 
-        /* 滾動條美化 */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        /* ========================================= */
+        /* 📱 手機版 RWD 核心代碼 (Mobile CSS)     */
+        /* ========================================= */
+        @media (max-width: 768px) {
+            /* 1. 佈局改為垂直堆疊 */
+            body {
+                flex-direction: column;
+                height: auto;
+                overflow-y: auto; /* 允許整頁捲動 */
+            }
 
+            /* 2. 側邊欄變成頂部控制面板 */
+            .sidebar {
+                width: 100%;
+                height: auto;
+                padding: 20px;
+                box-shadow: none;
+                border-bottom: 1px solid var(--border);
+                flex-shrink: 0;
+            }
+            .logo { 
+                margin-bottom: 20px; 
+                justify-content: center; 
+            }
+
+            /* 3. 調整主內容區 */
+            .main {
+                width: 100%;
+                height: auto;
+                overflow: visible;
+            }
+            .content {
+                padding: 20px; /* 縮小內距 */
+            }
+
+            /* 4. 頂部標題列調整 */
+            .top-bar {
+                padding: 0 20px;
+                height: 56px;
+            }
+            .top-title {
+                font-size: 15px;
+            }
+
+            /* 5. 儀表板改為 2 欄 (原本是 4 欄會太擠) */
+            .hud-grid {
+                grid-template-columns: 1fr 1fr; 
+                gap: 12px;
+            }
+            .hud-card {
+                padding: 16px;
+            }
+            .hud-val {
+                font-size: 20px;
+            }
+
+            /* 6. 圖表高度調整 */
+            .chart-box {
+                height: 300px;
+                padding: 16px;
+            }
+
+            /* 7. 報告區塊調整 */
+            .report-box {
+                padding: 24px;
+            }
+            .markdown-body h1 {
+                font-size: 24px;
+            }
+            
+            /* 8. 放大點擊區域 (優化手指體驗) */
+            select, input, .btn {
+                padding: 14px;
+                font-size: 16px; /* 防止 iOS 輸入時自動放大 */
+            }
+            
+            /* 9. 隱藏不必要的底部版號 */
+            .sidebar > div[style*="font-size:12px"] {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -342,43 +432,32 @@
     <div class="section-label">個股研究 Equity Research</div>
     <select id="sel" onchange="document.getElementById('inp').value=this.value">
         <option value="" disabled selected>快速選擇 Quick Select</option>
-<optgroup label="🔥 熱門台股">
+        <optgroup label="🔥 熱門台股">
             <option value="2330">2330 台積電</option>
             <option value="2317">2317 鴻海</option>
             <option value="2603">2603 長榮</option>
             <option value="0050">0050 台灣50</option>
         </optgroup>
-
         <optgroup label="🇺🇸 美股巨頭">
             <option value="NVDA">NVDA 輝達</option>
             <option value="TSLA">TSLA 特斯拉</option>
             <option value="AAPL">AAPL 蘋果</option>
             <option value="AMD">AMD 超微</option>
         </optgroup>
-
-        <optgroup label="🪙 加密貨幣 (Crypto)">
+        <optgroup label="🪙 加密貨幣">
             <option value="BTC-USD">BTC 比特幣</option>
             <option value="ETH-USD">ETH 以太幣</option>
-            <option value="SOL-USD">SOL Solana</option>
-            <option value="ADA-USD">ADA Cardano</option>
-            <option value="XRP-USD">XRP Ripple</option>
-            <option value="BNB-USD">BNB 幣安幣</option>
-        </optgroup>
-
-        <optgroup label="🏆 貴金屬 (Futures)">
-            <option value="GC=F">Gold 黃金</option>
-            <option value="SI=F">Silver 白銀</option>
         </optgroup>
     </select>
     
-    <input type="text" id="inp" placeholder="輸入代號 Enter Ticker (e.g., 2330)...">
+    <input type="text" id="inp" placeholder="輸入代號 Enter Ticker...">
     
     <button class="btn btn-primary" onclick="run('STOCK')">
         <i class="fa-solid fa-bolt"></i> 開始分析 Start Analysis
     </button>
 
     <div style="flex:1"></div>
-    <div style="font-size:12px; color:rgba(255,255,255,0.4);">v2.0 專業版 Professional Edition</div>
+    <div style="font-size:12px; color:rgba(255,255,255,0.4);">v2.1 RWD Edition</div>
 </div>
 
 <!-- 主內容 -->
@@ -456,7 +535,11 @@ async function run(type) {
     document.getElementById('reportBox').style.display = 'none';
     document.getElementById('loader').style.display = 'block';
     
-    // 根據請求類型顯示不同的加載文字
+    // 手機版自動捲動到 loading
+    if(window.innerWidth <= 768) {
+        document.getElementById('loader').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    
     document.getElementById('statusText').innerText = type==='WEEKLY' 
         ? "正在分析宏觀經濟數據 / Analyzing Macro Data..." 
         : "正在獲取即時市場數據 / Fetching Real-time Data...";
@@ -481,7 +564,7 @@ async function run(type) {
             const m = data.meta;
             document.getElementById('h-price').innerText = m.price;
             
-            // 漲跌顏色處理 (台股習慣：紅漲綠跌)
+            // 漲跌顏色處理
             const pctElem = document.getElementById('h-pct');
             pctElem.innerText = (m.pct > 0 ? '+' : '') + m.pct + '%';
             pctElem.style.color = m.pct >= 0 ? 'var(--danger)' : 'var(--success)'; 
@@ -519,9 +602,8 @@ function renderChart(dates, prices) {
     const ctx = document.getElementById('priceChart').getContext('2d');
     if(myChart) myChart.destroy();
     
-    // 建立專業藍色漸層
     let gradient = ctx.createLinearGradient(0, 0, 0, 400);
-    gradient.addColorStop(0, 'rgba(37, 99, 235, 0.2)'); // Blue with opacity
+    gradient.addColorStop(0, 'rgba(37, 99, 235, 0.2)'); 
     gradient.addColorStop(1, 'rgba(37, 99, 235, 0)');
 
     myChart = new Chart(ctx, {
@@ -531,10 +613,10 @@ function renderChart(dates, prices) {
             datasets: [{
                 label: 'Price',
                 data: prices,
-                borderColor: '#2563eb', // Professional Blue
+                borderColor: '#2563eb',
                 backgroundColor: gradient,
                 borderWidth: 2,
-                pointRadius: 3,
+                pointRadius: window.innerWidth < 768 ? 2 : 3, // 手機版縮小圓點
                 pointBackgroundColor: '#ffffff',
                 pointBorderColor: '#2563eb',
                 fill: true,
@@ -562,7 +644,11 @@ function renderChart(dates, prices) {
             scales: {
                 x: { 
                     grid: { display: false }, 
-                    ticks: { color: '#64748b', font: {family: 'Inter'} } 
+                    ticks: { 
+                        color: '#64748b', 
+                        font: {family: 'Inter'},
+                        maxTicksLimit: window.innerWidth < 768 ? 5 : 10 // 手機版減少X軸標籤
+                    } 
                 },
                 y: { 
                     grid: { color: '#f1f5f9', borderDash: [5, 5] }, 
@@ -601,7 +687,6 @@ function copyRaw() {
     document.execCommand('copy');
     txt.style.display = 'none';
     
-    // 更改按鈕文字提示成功
     const btn = document.querySelector('.copy-btn');
     const originalText = btn.innerHTML;
     btn.innerHTML = '<i class="fa-solid fa-check"></i> 已複製 Copied!';
