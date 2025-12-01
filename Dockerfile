@@ -1,10 +1,10 @@
-# 🟢 修正點：升級到 Python 3.11，解決套件版本過新的問題
-FROM python:3.11-slim
+# 🟢 修正點：升級到 Python 3.12 (滿足套件的強制要求)
+FROM python:3.12-slim
 
 # 設定工作目錄
 WORKDIR /app
 
-# 安裝系統層級依賴 (編譯器與工具)
+# 安裝系統層級依賴
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
 # 複製需求清單
 COPY requirements.txt .
 
-# 安裝 Python 套件 (讓 pip 自動解決版本相容性)
+# 安裝 Python 套件
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
